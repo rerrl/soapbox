@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS minis (
 
 -- Inserting apps
 INSERT INTO mini_developers (name) VALUES ('Soapbox');
-INSERT INTO minis (name, image, slug, size, developer_id) VALUES ('Polls', '', '/polls', 1, 1);
+INSERT INTO minis (name, image, slug, size, description, developer_id) VALUES ('Polls', '', '/polls', 1, 'polls', 1);
 
 CREATE TABLE IF NOT EXISTS mini_scores (
     room VARCHAR(27) NOT NULL,
