@@ -28,3 +28,9 @@ how to get this thing going (linux)
 
 - try `vagrant up` again
 - after this completes, run `vagrant reload`
+
+## tips:
+- destroy vm: `vagrant destroy -f`
+- halt and vagrant up: `vagrant halt`
+- ssh into vm: `vagrant ssh`
+- sometimes on destroy, you may need to remove the `vagrant/provisioned` file to get a fresh start
