@@ -30,7 +30,10 @@ how to get this thing going (linux)
 - after this completes, run `vagrant reload`
 
 ## tips:
+
 - destroy vm: `vagrant destroy -f`
-- halt and vagrant up: `vagrant halt`
+- halt and vagrant up: `vagrant reload`
 - ssh into vm: `vagrant ssh`
 - sometimes on destroy, you may need to remove the `vagrant/provisioned` file to get a fresh start
+
+if you want to test locally without vagrant, from the root of the project, run `go run main.go -c conf/services/soapbox.toml`. As of right now things will be broken becuase no services are configured locally. Maybe docker-compose this to get it working locally?

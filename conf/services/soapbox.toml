@@ -28,12 +28,12 @@ password = "voicely"
 database = "voicely"
 ssl = "disable"
 
-[listen]
-port = 8080
-
 [grpc]
 host = "127.0.0.1"
 port = "50052"
+
+[listen]
+port = 8080
 
 [login]
 email = false

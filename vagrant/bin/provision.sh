@@ -5,10 +5,7 @@ sudo yum remove git*
 sudo yum clean all
 
 sudo yum install -y epel-release
-
-
 sudo yum install -y git
-
 sudo yum install -y https://packages.endpointdev.com/rhel/7/main/x86_64/endpoint-repo.x86_64.rpm
 
 wget http://rpms.remirepo.net/enterprise/remi-release-7.rpm
@@ -60,38 +57,43 @@ sudo su - postgres -c "psql -t voicely -a -w -f /var/www/db/tables.sql"
 sudo rm /var/lib/pgsql/9.6/data/pg_hba.conf
 sudo ln -s /vagrant/conf/pg_hba.conf /var/lib/pgsql/9.6/data/pg_hba.conf
 
-# TODO uncomment and get below working
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.1-x86_64.rpm
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.1-x86_64.rpm.sha512
+sudo rpm --install elasticsearch-7.8.1-x86_64.rpm
 
-# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.1-x86_64.rpm
-# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.1-x86_64.rpm.sha512
-# sudo rpm --install elasticsearch-7.8.1-x86_64.rpm
+sudo rm -rf /etc/nginx/nginx.conf
+sudo ln -s /vagrant/conf/nginx.conf /etc/nginx/nginx.conf
 
-# sudo rm -rf /etc/nginx/nginx.conf
-# sudo ln -s /vagrant/conf/nginx.conf /etc/nginx/nginx.conf
+# here
+mkdir -p $GOPATH/src/github.com/soapboxsocial/
+sudo ln -s /var/www/ $GOPATH/src/github.com/soapboxsocial/soapbox
 
-# mkdir -p $GOPATH/src/github.com/soapboxsocial/
-# sudo ln -s /var/www/ $GOPATH/src/github.com/soapboxsocial/soapbox
+mkdir -p /conf/services
+sudo cp -p /var/www/conf/services/* /conf/services
+sudo chown nginx:nginx -R /conf/services
 
-# mkdir -p /conf/services
-# sudo cp -p /var/www/conf/services/* /conf/services
-# sudo chown nginx:nginx -R /conf/services
+sudo ln -s $GOPATH/src/github.com/soapboxsocial/soapbox/conf/services/ /conf/services
 
-# sudo ln -s $GOPATH/src/github.com/soapboxsocial/soapbox/conf/services/ /conf/services
+sudo mkdir -p /cdn/images/
+sudo chown nginx:nginx -R /cdn/images
+sudo chmod -R 0777 /cdn/images
 
-# sudo chown nginx:nginx -R /cdn/images
-# sudo chmod -R 0777 /cdn/images
+sudo mkdir -p /cdn/stories/
+sudo chown nginx:nginx -R /cdn/stories
+sudo chmod -R 0777 /cdn/stories
 
-# sudo mkdir -p /cdn/stories/
-# sudo chown nginx:nginx -R /cdn/stories
-# sudo chmod -R 0777 /cdn/stories
-
+echo "building soapbox... (manually (ssh this))"
 # cd $GOPATH/src/github.com/soapboxsocial/soapbox && sudo go build -o /usr/local/bin/soapbox main.go
+# echo "building indexer..."
 # cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/indexer && sudo go build -o /usr/local/bin/indexer main.go
+# echo "building rooms..."
 # cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/rooms && sudo go build -o /usr/local/bin/rooms main.go
+# echo "building stories..."
 # cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/stories && sudo go build -o /usr/local/bin/stories main.go
 
+# echo "done building!"
 # crontab /vagrant/conf/crontab
 
-touch /vagrant/provisioned
+# touch /vagrant/provisioned
 
 echo "Provisioning done! Run 'vagrant reload'"
