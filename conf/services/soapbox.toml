@@ -10,10 +10,10 @@ images = "/cdn/images"
 stories = "/cdn/stories"
 
 [apple]
-path = "/conf/sign-in-key.p8"
-key = ""
-team = ""
-bundle = "app.social.soapbox"
+path = "/conf/AuthKey_V66H7M2538.p8" # change to absolute path when deploying
+key = "V66H7M2538"
+team = "7V2BB6PC84"
+bundle = "com.triibe.social"
 
 [redis]
 host = "localhost"

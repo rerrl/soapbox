@@ -83,7 +83,7 @@ sudo chown nginx:nginx -R /cdn/stories
 sudo chmod -R 0777 /cdn/stories
 
 echo "building soapbox... (manually (ssh this))"
-# cd $GOPATH/src/github.com/soapboxsocial/soapbox && sudo go build -o /usr/local/bin/soapbox main.go
+cd $GOPATH/src/github.com/soapboxsocial/soapbox && sudo go build -o /usr/local/bin/soapbox main.go
 # echo "building indexer..."
 # cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/indexer && sudo go build -o /usr/local/bin/indexer main.go
 # echo "building rooms..."

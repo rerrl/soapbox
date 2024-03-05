@@ -1,17 +1,19 @@
 # #!/usr/bin/env bash
 
-echo "running boot.sh"
+echo "running boot.sh..."
 
 ## TODO uncomment and get below working
 
-# PATH=$PATH:/usr/local/bin
+PATH=$PATH:/usr/local/bin
 
-# setsebool httpd_can_network_connect on -P
+sudo setsebool httpd_can_network_connect on -P
 
-# sudo service nginx start
-# sudo service postgresql-9.6 start
-# sudo service redis start
-# sudo service elasticsearch start
+sudo service nginx start
+sudo service postgresql-9.6 start
+sudo service redis start
+sudo service elasticsearch start
 
-# sudo systemctl start supervisord
-# sudo systemctl enable supervisord
+sudo systemctl start supervisord
+sudo systemctl enable supervisord
+
+echo "boot.sh complete"

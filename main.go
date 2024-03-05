@@ -3,26 +3,27 @@ package main
 import (
 	"flag"
 	"fmt"
-
-	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
-	//	"strings"
-
-	//	signinwithapple "github.com/Timothylock/go-signin-with-apple/apple"
-	//	"github.com/dghubble/oauth1"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/gorilla/mux"
 
-	"github.com/sendgrid/sendgrid-go"
-	//	"google.golang.org/grpc"
+	// "github.com/sendgrid/sendgrid-go"
+	"google.golang.org/grpc"
 
-	//	"github.com/soapboxsocial/soapbox/pkg/account"
+	"github.com/soapboxsocial/soapbox/pkg/account"
+	"github.com/soapboxsocial/soapbox/pkg/analytics"
+	"github.com/soapboxsocial/soapbox/pkg/blocks"
+
+	// "github.com/soapboxsocial/soapbox/pkg/minis"
+
+	"github.com/soapboxsocial/soapbox/pkg/search"
+
 	//	"github.com/soapboxsocial/soapbox/pkg/activeusers"
 	//	"github.com/soapboxsocial/soapbox/pkg/analytics"
-	//	"github.com/soapboxsocial/soapbox/pkg/apple"
-	//	"github.com/soapboxsocial/soapbox/pkg/blocks"
+
 	"github.com/soapboxsocial/soapbox/pkg/conf"
 	"github.com/soapboxsocial/soapbox/pkg/login"
 
@@ -33,22 +34,22 @@ import (
 	"github.com/soapboxsocial/soapbox/pkg/http/middlewares"
 
 	"github.com/soapboxsocial/soapbox/pkg/images"
-	//	"github.com/soapboxsocial/soapbox/pkg/linkedaccounts"
+
 	//	"github.com/soapboxsocial/soapbox/pkg/login"
-	"github.com/soapboxsocial/soapbox/pkg/mail"
+
 	//	"github.com/soapboxsocial/soapbox/pkg/me"
-	//	"github.com/soapboxsocial/soapbox/pkg/minis"
 	"github.com/soapboxsocial/soapbox/pkg/notifications"
 	"github.com/soapboxsocial/soapbox/pkg/pubsub"
 
 	//	"github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
 	"github.com/soapboxsocial/soapbox/pkg/redis"
-	//	"github.com/soapboxsocial/soapbox/pkg/rooms/pb"
+	"github.com/soapboxsocial/soapbox/pkg/rooms/pb"
+
 	//	"github.com/soapboxsocial/soapbox/pkg/search"
 	"github.com/soapboxsocial/soapbox/pkg/sessions"
 	"github.com/soapboxsocial/soapbox/pkg/sql"
 
-	//	"github.com/soapboxsocial/soapbox/pkg/stories"
+	"github.com/soapboxsocial/soapbox/pkg/stories"
 	"github.com/soapboxsocial/soapbox/pkg/users"
 )
 
@@ -135,144 +136,157 @@ func main() {
 	r := mux.NewRouter()
 	fmt.Printf("r: %+v\n\n", r)
 
+	// health check endpoint
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "OK")
+	}).Methods("GET")
+
 	r.MethodNotAllowedHandler = http.HandlerFunc(httputil.NotAllowedHandler)
 	r.NotFoundHandler = http.HandlerFunc(httputil.NotFoundHandler)
 
 	ib := images.NewImagesBackend(config.CDN.Images)
-	ms := mail.NewMailService(sendgrid.NewSendClient(config.Sendgrid.Key))
-	fmt.Printf("ib: %+v\n\n", ib)
-	fmt.Printf("ms: %+v\n\n", ms)
+	// ms := mail.NewMailService(sendgrid.NewSendClient(config.Sendgrid.Key))
+	// fmt.Printf("ib: %+v\n\n", ib)
+	// fmt.Printf("ms: %+v\n\n", ms)
 
 	loginState := login.NewStateManager(rdb)
 	fmt.Printf("loginState: %+v\n\n", loginState)
 
-	secret, err := ioutil.ReadFile(config.Apple.Path)
+	// secret, err := ioutil.ReadFile(config.Apple.Path)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Printf("secret: %+v\n\n", secret)
+
+	// appleClient, err := apple.NewSignInWithAppleAppValidation(
+	// 	signinwithapple.New(),
+	// 	config.Apple.TeamID,
+	// 	config.Apple.Bundle,
+	// 	config.Apple.KeyID,
+	// 	string(secret),
+	// )
+	// fmt.Printf("appleClient: %+v\n\n", appleClient)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", config.GRPC.Host, config.GRPC.Port), grpc.WithInsecure())
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	fmt.Printf("secret: %+v\n\n", secret)
+	fmt.Printf("conn: %+v\n\n", conn)
 
-	// 	appleClient, err := apple.NewSignInWithAppleAppValidation(
-	// 		signinwithapple.New(),
-	// 		config.Apple.TeamID,
-	// 		config.Apple.Bundle,
-	// 		config.Apple.KeyID,
-	// 		string(secret),
-	// 	)
+	defer conn.Close()
 
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+	roomService := pb.NewRoomServiceClient(conn)
+	fmt.Printf("roomService: %+v\n\n", roomService)
 
-	// 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", config.GRPC.Host, config.GRPC.Port), grpc.WithInsecure())
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
+	// loginEndpoints := login.NewEndpoint(ub, loginState, s, ms, ib, queue, appleClient, roomService, config.Login)
+	// loginRouter := loginEndpoints.Router()
+	// fmt.Printf("loginRouter: %+v\n\n", loginRouter)
+	// mount(r, "/v1/login", loginRouter)
 
-	// 	defer conn.Close()
+	storiesBackend := stories.NewBackend(db)
+	fmt.Printf("storiesBackend: %+v\n\n", storiesBackend)
 
-	// 	roomService := pb.NewRoomServiceClient(conn)
+	usersEndpoints := users.NewEndpoint(
+		ub,
+		fb,
+		s,
+		ib,
+		queue,
+		storiesBackend,
+	)
+	usersRouter := usersEndpoints.Router()
+	usersRouter.Use(amw.Middleware)
+	mount(r, "/v1/users", usersRouter)
 
-	// 	loginEndpoints := login.NewEndpoint(ub, loginState, s, ms, ib, queue, appleClient, roomService, config.Login)
-	// 	loginRouter := loginEndpoints.Router()
-	// 	mount(r, "/v1/login", loginRouter)
+	storiesEndpoint := stories.NewEndpoint(storiesBackend, stories.NewFileBackend(config.CDN.Stories), queue)
+	storiesRouter := storiesEndpoint.Router()
+	storiesRouter.Use(amw.Middleware)
+	mount(r, "/v1/stories", storiesRouter)
 
-	// 	storiesBackend := stories.NewBackend(db)
+	devicesEndpoint := devices.NewEndpoint(devicesBackend)
+	devicesRoutes := devicesEndpoint.Router()
+	devicesRoutes.Use(amw.Middleware)
+	mount(r, "/v1/devices", devicesRoutes)
 
-	// 	usersEndpoints := users.NewEndpoint(
-	// 		ub,
-	// 		fb,
-	// 		s,
-	// 		ib,
-	// 		queue,
-	// 		storiesBackend,
-	// 	)
-	// 	usersRouter := usersEndpoints.Router()
-	// 	usersRouter.Use(amw.Middleware)
-	// 	mount(r, "/v1/users", usersRouter)
+	accountEndpoint := account.NewEndpoint(account.NewBackend(db), queue, s)
+	accountRouter := accountEndpoint.Router()
+	accountRouter.Use(amw.Middleware)
+	mount(r, "/v1/account", accountRouter)
 
-	// 	storiesEndpoint := stories.NewEndpoint(storiesBackend, stories.NewFileBackend(config.CDN.Stories), queue)
-	// 	storiesRouter := storiesEndpoint.Router()
-	// 	storiesRouter.Use(amw.Middleware)
-	// 	mount(r, "/v1/stories", storiesRouter)
+	blocksBackend := blocks.NewBackend(db)
+	blocksEndpoint := blocks.NewEndpoint(blocksBackend)
+	blocksRouter := blocksEndpoint.Router()
+	blocksRouter.Use(amw.Middleware)
+	mount(r, "/v1/blocks", blocksRouter)
 
-	// 	devicesEndpoint := devices.NewEndpoint(devicesBackend)
-	// 	devicesRoutes := devicesEndpoint.Router()
-	// 	devicesRoutes.Use(amw.Middleware)
-	// 	mount(r, "/v1/devices", devicesRoutes)
+	// twitter oauth config
+	// oauth := oauth1.NewConfig(
+	// 	config.Twitter.Key,
+	// 	config.Twitter.Secret,
+	// )
+	// fmt.Printf("oauth: %+v\n\n", oauth)
 
-	// 	accountEndpoint := account.NewEndpoint(account.NewBackend(db), queue, s)
-	// 	accountRouter := accountEndpoint.Router()
-	// 	accountRouter.Use(amw.Middleware)
-	// 	mount(r, "/v1/account", accountRouter)
+	// pb := linkedaccounts.NewLinkedAccountsBackend(db)
 
-	// 	blocksBackend := blocks.NewBackend(db)
-	// 	blocksEndpoint := blocks.NewEndpoint(blocksBackend)
-	// 	blocksRouter := blocksEndpoint.Router()
-	// 	blocksRouter.Use(amw.Middleware)
-	// 	mount(r, "/v1/blocks", blocksRouter)
+	// meEndpoint := me.NewEndpoint(ub, ns, oauth, pb, storiesBackend, queue, activeusers.NewBackend(db), notifications.NewSettings(db), follows.NewBackend(db))
+	// meRoutes := meEndpoint.Router()
 
-	// 	// twitter oauth config
-	// 	oauth := oauth1.NewConfig(
-	// 		config.Twitter.Key,
-	// 		config.Twitter.Secret,
-	// 	)
+	// meRoutes.Use(amw.Middleware)
+	// mount(r, "/v1/me", meRoutes)
 
-	// 	pb := linkedaccounts.NewLinkedAccountsBackend(db)
+	searchEndpoint := search.NewEndpoint(client)
+	searchRouter := searchEndpoint.Router()
+	searchRouter.Use(amw.Middleware)
+	mount(r, "/v1/search", searchRouter)
 
-	// 	meEndpoint := me.NewEndpoint(ub, ns, oauth, pb, storiesBackend, queue, activeusers.NewBackend(db), notifications.NewSettings(db), follows.NewBackend(db))
-	// 	meRoutes := meEndpoint.Router()
+	// minisBackend := minis.NewBackend(db)
 
-	// 	meRoutes.Use(amw.Middleware)
-	// 	mount(r, "/v1/me", meRoutes)
+	// keys := make(minis.AuthKeys)
+	// for _, m := range config.Minis {
+	// 	keys[m.Key] = m.ID
+	// }
 
-	// 	searchEndpoint := search.NewEndpoint(client)
-	// 	searchRouter := searchEndpoint.Router()
-	// 	searchRouter.Use(amw.Middleware)
-	// 	mount(r, "/v1/search", searchRouter)
+	// minisEndpoint := minis.NewEndpoint(minisBackend, amw, keys)
 
-	// 	minisBackend := minis.NewBackend(db)
+	// minisRouter := minisEndpoint.Router()
+	// mount(r, "/v1/minis", minisRouter)
 
-	// 	keys := make(minis.AuthKeys)
-	// 	for _, m := range config.Minis {
-	// 		keys[m.Key] = m.ID
-	// 	}
+	analyticsBackend := analytics.NewBackend(db)
+	analyticsEndpoint := analytics.NewEndpoint(analyticsBackend)
+	analyticsRouter := analyticsEndpoint.Router()
+	analyticsRouter.Use(amw.Middleware)
+	mount(r, "/v1/analytics", analyticsRouter)
 
-	// 	minisEndpoint := minis.NewEndpoint(minisBackend, amw, keys)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", config.Listen.Port), httputil.CORS(r))
+	if err != nil {
+		log.Print(err)
+	}
 
-	// 	minisRouter := minisEndpoint.Router()
-	// 	mount(r, "/v1/minis", minisRouter)
-
-	// 	analyticsBackend := analytics.NewBackend(db)
-	// 	analyticsEndpoint := analytics.NewEndpoint(analyticsBackend)
-	// 	analyticsRouter := analyticsEndpoint.Router()
-	// 	analyticsRouter.Use(amw.Middleware)
-	// 	mount(r, "/v1/analytics", analyticsRouter)
-
-	// 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.Listen.Port), httputil.CORS(r))
-	// 	if err != nil {
-	// 		log.Print(err)
-	// 	}
+	fmt.Println("Server started")
 }
 
-// func mount(r *mux.Router, path string, handler http.Handler) {
-// 	r.PathPrefix(path).Handler(
-// 		http.StripPrefix(
-// 			strings.TrimSuffix(path, "/"),
-// 			AddSlashForRoot(handler),
-// 		),
-// 	)
-// }
+func mount(r *mux.Router, path string, handler http.Handler) {
+	r.PathPrefix(path).Handler(
+		http.StripPrefix(
+			strings.TrimSuffix(path, "/"),
+			AddSlashForRoot(handler),
+		),
+	)
+}
 
-// // AddSlashForRoot adds a slash if the path is the root path.
-// // This is necessary for our subrouters where there may be a root.
-// func AddSlashForRoot(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		// @TODO MAYBE ENSURE SUFFIX DOESN'T ALREADY EXIST?
-// 		if r.URL.Path == "" {
-// 			r.URL.Path = "/"
-// 		}
+// AddSlashForRoot adds a slash if the path is the root path.
+// This is necessary for our subrouters where there may be a root.
+func AddSlashForRoot(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// @TODO MAYBE ENSURE SUFFIX DOESN'T ALREADY EXIST?
+		if r.URL.Path == "" {
+			r.URL.Path = "/"
+		}
 
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
+		next.ServeHTTP(w, r)
+	})
+}
