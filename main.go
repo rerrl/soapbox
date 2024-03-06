@@ -3,54 +3,44 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/dghubble/oauth1"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/gorilla/mux"
+	"github.com/sendgrid/sendgrid-go"
 
-	// "github.com/sendgrid/sendgrid-go"
-	"google.golang.org/grpc"
-
+	signinwithapple "github.com/Timothylock/go-signin-with-apple/apple"
 	"github.com/soapboxsocial/soapbox/pkg/account"
+	"github.com/soapboxsocial/soapbox/pkg/activeusers"
 	"github.com/soapboxsocial/soapbox/pkg/analytics"
+	"github.com/soapboxsocial/soapbox/pkg/apple"
 	"github.com/soapboxsocial/soapbox/pkg/blocks"
-
-	// "github.com/soapboxsocial/soapbox/pkg/minis"
-
-	"github.com/soapboxsocial/soapbox/pkg/search"
-
-	//	"github.com/soapboxsocial/soapbox/pkg/activeusers"
-	//	"github.com/soapboxsocial/soapbox/pkg/analytics"
-
 	"github.com/soapboxsocial/soapbox/pkg/conf"
-	"github.com/soapboxsocial/soapbox/pkg/login"
-
 	"github.com/soapboxsocial/soapbox/pkg/devices"
 	"github.com/soapboxsocial/soapbox/pkg/followers"
-
 	httputil "github.com/soapboxsocial/soapbox/pkg/http"
 	"github.com/soapboxsocial/soapbox/pkg/http/middlewares"
-
 	"github.com/soapboxsocial/soapbox/pkg/images"
-
-	//	"github.com/soapboxsocial/soapbox/pkg/login"
-
-	//	"github.com/soapboxsocial/soapbox/pkg/me"
+	"github.com/soapboxsocial/soapbox/pkg/linkedaccounts"
+	"github.com/soapboxsocial/soapbox/pkg/login"
+	"github.com/soapboxsocial/soapbox/pkg/mail"
+	"github.com/soapboxsocial/soapbox/pkg/me"
+	"github.com/soapboxsocial/soapbox/pkg/minis"
 	"github.com/soapboxsocial/soapbox/pkg/notifications"
 	"github.com/soapboxsocial/soapbox/pkg/pubsub"
-
-	//	"github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
+	"github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
 	"github.com/soapboxsocial/soapbox/pkg/redis"
 	"github.com/soapboxsocial/soapbox/pkg/rooms/pb"
-
-	//	"github.com/soapboxsocial/soapbox/pkg/search"
+	"github.com/soapboxsocial/soapbox/pkg/search"
 	"github.com/soapboxsocial/soapbox/pkg/sessions"
 	"github.com/soapboxsocial/soapbox/pkg/sql"
-
 	"github.com/soapboxsocial/soapbox/pkg/stories"
 	"github.com/soapboxsocial/soapbox/pkg/users"
+	"google.golang.org/grpc"
 )
 
 type Conf struct {
@@ -145,31 +135,31 @@ func main() {
 	r.NotFoundHandler = http.HandlerFunc(httputil.NotFoundHandler)
 
 	ib := images.NewImagesBackend(config.CDN.Images)
-	// ms := mail.NewMailService(sendgrid.NewSendClient(config.Sendgrid.Key))
-	// fmt.Printf("ib: %+v\n\n", ib)
-	// fmt.Printf("ms: %+v\n\n", ms)
+	ms := mail.NewMailService(sendgrid.NewSendClient(config.Sendgrid.Key))
+	fmt.Printf("ib: %+v\n\n", ib)
+	fmt.Printf("ms: %+v\n\n", ms)
 
 	loginState := login.NewStateManager(rdb)
 	fmt.Printf("loginState: %+v\n\n", loginState)
 
-	// secret, err := ioutil.ReadFile(config.Apple.Path)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Printf("secret: %+v\n\n", secret)
+	secret, err := ioutil.ReadFile(config.Apple.Path)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("secret: %+v\n\n", secret)
 
-	// appleClient, err := apple.NewSignInWithAppleAppValidation(
-	// 	signinwithapple.New(),
-	// 	config.Apple.TeamID,
-	// 	config.Apple.Bundle,
-	// 	config.Apple.KeyID,
-	// 	string(secret),
-	// )
-	// fmt.Printf("appleClient: %+v\n\n", appleClient)
+	appleClient, err := apple.NewSignInWithAppleAppValidation(
+		signinwithapple.New(),
+		config.Apple.TeamID,
+		config.Apple.Bundle,
+		config.Apple.KeyID,
+		string(secret),
+	)
+	fmt.Printf("appleClient: %+v\n\n", appleClient)
 
-	// if err != nil {
-	// 	panic(err)
-	// }
+	if err != nil {
+		panic(err)
+	}
 
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", config.GRPC.Host, config.GRPC.Port), grpc.WithInsecure())
 	if err != nil {
@@ -182,10 +172,10 @@ func main() {
 	roomService := pb.NewRoomServiceClient(conn)
 	fmt.Printf("roomService: %+v\n\n", roomService)
 
-	// loginEndpoints := login.NewEndpoint(ub, loginState, s, ms, ib, queue, appleClient, roomService, config.Login)
-	// loginRouter := loginEndpoints.Router()
-	// fmt.Printf("loginRouter: %+v\n\n", loginRouter)
-	// mount(r, "/v1/login", loginRouter)
+	loginEndpoints := login.NewEndpoint(ub, loginState, s, ms, ib, queue, appleClient, roomService, config.Login)
+	loginRouter := loginEndpoints.Router()
+	fmt.Printf("loginRouter: %+v\n\n", loginRouter)
+	mount(r, "/v1/login", loginRouter)
 
 	storiesBackend := stories.NewBackend(db)
 	fmt.Printf("storiesBackend: %+v\n\n", storiesBackend)
@@ -224,36 +214,36 @@ func main() {
 	mount(r, "/v1/blocks", blocksRouter)
 
 	// twitter oauth config
-	// oauth := oauth1.NewConfig(
-	// 	config.Twitter.Key,
-	// 	config.Twitter.Secret,
-	// )
-	// fmt.Printf("oauth: %+v\n\n", oauth)
+	oauth := oauth1.NewConfig(
+		config.Twitter.Key,
+		config.Twitter.Secret,
+	)
+	fmt.Printf("oauth: %+v\n\n", oauth)
 
-	// pb := linkedaccounts.NewLinkedAccountsBackend(db)
+	pb := linkedaccounts.NewLinkedAccountsBackend(db)
 
-	// meEndpoint := me.NewEndpoint(ub, ns, oauth, pb, storiesBackend, queue, activeusers.NewBackend(db), notifications.NewSettings(db), follows.NewBackend(db))
-	// meRoutes := meEndpoint.Router()
+	meEndpoint := me.NewEndpoint(ub, ns, oauth, pb, storiesBackend, queue, activeusers.NewBackend(db), notifications.NewSettings(db), follows.NewBackend(db))
+	meRoutes := meEndpoint.Router()
 
-	// meRoutes.Use(amw.Middleware)
-	// mount(r, "/v1/me", meRoutes)
+	meRoutes.Use(amw.Middleware)
+	mount(r, "/v1/me", meRoutes)
 
 	searchEndpoint := search.NewEndpoint(client)
 	searchRouter := searchEndpoint.Router()
 	searchRouter.Use(amw.Middleware)
 	mount(r, "/v1/search", searchRouter)
 
-	// minisBackend := minis.NewBackend(db)
+	minisBackend := minis.NewBackend(db)
 
-	// keys := make(minis.AuthKeys)
-	// for _, m := range config.Minis {
-	// 	keys[m.Key] = m.ID
-	// }
+	keys := make(minis.AuthKeys)
+	for _, m := range config.Minis {
+		keys[m.Key] = m.ID
+	}
 
-	// minisEndpoint := minis.NewEndpoint(minisBackend, amw, keys)
+	minisEndpoint := minis.NewEndpoint(minisBackend, amw, keys)
 
-	// minisRouter := minisEndpoint.Router()
-	// mount(r, "/v1/minis", minisRouter)
+	minisRouter := minisEndpoint.Router()
+	mount(r, "/v1/minis", minisRouter)
 
 	analyticsBackend := analytics.NewBackend(db)
 	analyticsEndpoint := analytics.NewEndpoint(analyticsBackend)

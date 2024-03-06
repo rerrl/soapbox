@@ -1,6 +1,6 @@
 [twitter]
-key = ""
-secret = ""
+key = "urQc0u9lRS42XN8J5njYOR3GD"
+secret = "feX4xXuflmrnCPpgFCGptJiPEoxo7YsfTiznvhCJhoNm1yyXjBs"
 
 [sendgrid]
 key = ""
@@ -10,7 +10,7 @@ images = "/cdn/images"
 stories = "/cdn/stories"
 
 [apple]
-path = "/conf/AuthKey_V66H7M2538.p8" # change to absolute path when deploying
+path = "/conf/AuthKey_V66H7M2538.p8"
 key = "V66H7M2538"
 team = "7V2BB6PC84"
 bundle = "com.triibe.social"

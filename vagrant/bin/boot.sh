@@ -2,8 +2,6 @@
 
 echo "running boot.sh..."
 
-## TODO uncomment and get below working
-
 PATH=$PATH:/usr/local/bin
 
 sudo setsebool httpd_can_network_connect on -P

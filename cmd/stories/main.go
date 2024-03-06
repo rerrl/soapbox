@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"time"
 
@@ -34,6 +35,7 @@ func parse() (*Conf, error) {
 }
 
 func main() {
+	fmt.Printf("Stories starting...\n\n")
 	config, err := parse()
 	if err != nil {
 		log.Fatal("failed to parse config")

@@ -15,10 +15,10 @@ database = "voicely"
 ssl = "disable"
 
 [apns]
-path = "/conf/authkey.p8"
-key = "9U8K3MKG2K"
-team = "Z9LC5GZ33U"
-bundle = "app.social.soapbox"
+path = "/conf/AuthKey_V66H7M2538.p8"
+key = "V66H7M2538"
+team = "7V2BB6PC84"
+bundle = "com.triibe.social"
 
 [rooms]
 host = "127.0.0.1"

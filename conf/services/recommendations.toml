@@ -1,6 +1,6 @@
 [twitter]
-key = "nAzgMi6loUf3cl0hIkkXhZSth"
-secret = "sFQEQ2cjJZSJgepUMmNyeTxiGggFXA1EKfSYAXpbARTu3CXBQY"
+key = "urQc0u9lRS42XN8J5njYOR3GD"
+secret = "feX4xXuflmrnCPpgFCGptJiPEoxo7YsfTiznvhCJhoNm1yyXjB"
 
 [redis]
 host = "localhost"

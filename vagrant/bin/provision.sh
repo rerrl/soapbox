@@ -70,6 +70,7 @@ sudo ln -s /var/www/ $GOPATH/src/github.com/soapboxsocial/soapbox
 
 mkdir -p /conf/services
 sudo cp -p /var/www/conf/services/* /conf/services
+sudo cp $GOPATH/src/github.com/soapboxsocial/soapbox/conf/*.p8 /conf/
 sudo chown nginx:nginx -R /conf/services
 
 sudo ln -s $GOPATH/src/github.com/soapboxsocial/soapbox/conf/services/ /conf/services
@@ -84,16 +85,16 @@ sudo chmod -R 0777 /cdn/stories
 
 echo "building soapbox... (manually (ssh this))"
 cd $GOPATH/src/github.com/soapboxsocial/soapbox && sudo go build -o /usr/local/bin/soapbox main.go
-# echo "building indexer..."
-# cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/indexer && sudo go build -o /usr/local/bin/indexer main.go
-# echo "building rooms..."
-# cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/rooms && sudo go build -o /usr/local/bin/rooms main.go
-# echo "building stories..."
-# cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/stories && sudo go build -o /usr/local/bin/stories main.go
+echo "building indexer..."
+cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/indexer && sudo go build -o /usr/local/bin/indexer main.go
+echo "building rooms..."
+cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/rooms && sudo go build -o /usr/local/bin/rooms main.go
+ echo "building stories..."
+cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/stories && sudo go build -o /usr/local/bin/stories main.go
 
-# echo "done building!"
-# crontab /vagrant/conf/crontab
+echo "done building!"
+crontab /vagrant/conf/crontab
 
-# touch /vagrant/provisioned
+touch /vagrant/provisioned
 
 echo "Provisioning done! Run 'vagrant reload'"
