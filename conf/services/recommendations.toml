@@ -1,7 +1,3 @@
-[twitter]
-key = "urQc0u9lRS42XN8J5njYOR3GD"
-secret = "feX4xXuflmrnCPpgFCGptJiPEoxo7YsfTiznvhCJhoNm1yyXjB"
-
 [redis]
 host = "localhost"
 port = 6379

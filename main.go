@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dghubble/oauth1"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/gorilla/mux"
 	"github.com/sendgrid/sendgrid-go"
@@ -32,7 +31,8 @@ import (
 	"github.com/soapboxsocial/soapbox/pkg/minis"
 	"github.com/soapboxsocial/soapbox/pkg/notifications"
 	"github.com/soapboxsocial/soapbox/pkg/pubsub"
-	"github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
+
+	// "github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
 	"github.com/soapboxsocial/soapbox/pkg/redis"
 	"github.com/soapboxsocial/soapbox/pkg/rooms/pb"
 	"github.com/soapboxsocial/soapbox/pkg/search"
@@ -44,10 +44,10 @@ import (
 )
 
 type Conf struct {
-	Twitter struct {
-		Key    string `mapstructure:"key"`
-		Secret string `mapstructure:"secret"`
-	} `mapstructure:"twitter"`
+	// Twitter struct {
+	// 	Key    string `mapstructure:"key"`
+	// 	Secret string `mapstructure:"secret"`
+	// } `mapstructure:"twitter"`
 	Sendgrid struct {
 		Key string `mapstructure:"key"`
 	} `mapstructure:"sendgrid"`
@@ -214,15 +214,15 @@ func main() {
 	mount(r, "/v1/blocks", blocksRouter)
 
 	// twitter oauth config
-	oauth := oauth1.NewConfig(
-		config.Twitter.Key,
-		config.Twitter.Secret,
-	)
-	fmt.Printf("oauth: %+v\n\n", oauth)
+	// oauth := oauth1.NewConfig(
+	// 	config.Twitter.Key,
+	// 	config.Twitter.Secret,
+	// )
+	// fmt.Printf("oauth: %+v\n\n", oauth)
 
 	pb := linkedaccounts.NewLinkedAccountsBackend(db)
 
-	meEndpoint := me.NewEndpoint(ub, ns, oauth, pb, storiesBackend, queue, activeusers.NewBackend(db), notifications.NewSettings(db), follows.NewBackend(db))
+	meEndpoint := me.NewEndpoint(ub, ns, pb, storiesBackend, queue, activeusers.NewBackend(db), notifications.NewSettings(db))
 	meRoutes := meEndpoint.Router()
 
 	meRoutes.Use(amw.Middleware)

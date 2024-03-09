@@ -22,7 +22,8 @@ import (
 	"github.com/soapboxsocial/soapbox/pkg/notifications/pb"
 	"github.com/soapboxsocial/soapbox/pkg/notifications/worker"
 	"github.com/soapboxsocial/soapbox/pkg/pubsub"
-	"github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
+
+	// "github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
 	"github.com/soapboxsocial/soapbox/pkg/redis"
 	"github.com/soapboxsocial/soapbox/pkg/rooms"
 	roompb "github.com/soapboxsocial/soapbox/pkg/rooms/pb"
@@ -181,8 +182,8 @@ func setupHandlers(db *sqldb.DB, roomsAddr conf.AddrConf, settings *notification
 	welcome := handlers.NewWelcomeRoomNotificationHandler(userBackend, settings)
 	notificationHandlers[welcome.Type()] = welcome
 
-	recommendations := handlers.NewFollowRecommendationsNotificationHandler(settings, follows.NewBackend(db))
-	notificationHandlers[recommendations.Type()] = recommendations
+	// recommendations := handlers.NewFollowRecommendationsNotificationHandler(settings, follows.NewBackend(db))
+	// notificationHandlers[recommendations.Type()] = recommendations
 
 	return notificationHandlers
 }

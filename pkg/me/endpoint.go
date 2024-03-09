@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dghubble/go-twitter/twitter"
-	"github.com/dghubble/oauth1"
 	"github.com/gorilla/mux"
 
 	"github.com/soapboxsocial/soapbox/pkg/activeusers"
@@ -15,22 +13,23 @@ import (
 	"github.com/soapboxsocial/soapbox/pkg/linkedaccounts"
 	"github.com/soapboxsocial/soapbox/pkg/notifications"
 	"github.com/soapboxsocial/soapbox/pkg/pubsub"
-	"github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
+
+	// "github.com/soapboxsocial/soapbox/pkg/recommendations/follows"
 	"github.com/soapboxsocial/soapbox/pkg/stories"
 	"github.com/soapboxsocial/soapbox/pkg/users"
 	"github.com/soapboxsocial/soapbox/pkg/users/types"
 )
 
 type Endpoint struct {
-	users           *users.Backend
-	ns              *notifications.Storage
-	oauthConfig     *oauth1.Config
-	la              *linkedaccounts.Backend
-	stories         *stories.Backend
-	queue           *pubsub.Queue
-	actives         *activeusers.Backend
-	targets         *notifications.Settings
-	recommendations *follows.Backend
+	users *users.Backend
+	ns    *notifications.Storage
+	// oauthConfig     *oauth1.Config
+	la      *linkedaccounts.Backend
+	stories *stories.Backend
+	queue   *pubsub.Queue
+	actives *activeusers.Backend
+	targets *notifications.Settings
+	// recommendations *follows.Backend
 }
 
 // Settings represents a users settings
@@ -60,24 +59,24 @@ type Notification struct {
 func NewEndpoint(
 	users *users.Backend,
 	ns *notifications.Storage,
-	config *oauth1.Config,
+	// config *oauth1.Config,
 	la *linkedaccounts.Backend,
 	backend *stories.Backend,
 	queue *pubsub.Queue,
 	actives *activeusers.Backend,
 	targets *notifications.Settings,
-	recommendations *follows.Backend,
+	// recommendations *follows.Backend,
 ) *Endpoint {
 	return &Endpoint{
-		users:           users,
-		ns:              ns,
-		oauthConfig:     config,
-		la:              la,
-		stories:         backend,
-		queue:           queue,
-		actives:         actives,
-		targets:         targets,
-		recommendations: recommendations,
+		users: users,
+		ns:    ns,
+		// oauthConfig:     config,
+		la:      la,
+		stories: backend,
+		queue:   queue,
+		actives: actives,
+		targets: targets,
+		// recommendations: recommendations,
 	}
 }
 
@@ -86,12 +85,12 @@ func (m *Endpoint) Router() *mux.Router {
 
 	r.HandleFunc("/", m.me).Methods("GET")
 	r.HandleFunc("/notifications", m.notifications).Methods("GET")
-	r.HandleFunc("/profiles/twitter", m.addTwitter).Methods("POST")
-	r.HandleFunc("/profiles/twitter", m.removeTwitter).Methods("DELETE")
+	// r.HandleFunc("/profiles/twitter", m.addTwitter).Methods("POST")
+	// r.HandleFunc("/profiles/twitter", m.removeTwitter).Methods("DELETE")
 	r.HandleFunc("/feed", m.feed).Methods("GET")
 	r.HandleFunc("/feed/actives", m.activeUsers).Methods("GET")
 	r.HandleFunc("/settings", m.settings).Methods("GET")
-	r.HandleFunc("/following/recommendations", m.followingRecommendations).Methods("GET")
+	// r.HandleFunc("/following/recommendations", m.followingRecommendations).Methods("GET")
 	r.HandleFunc("/settings/notifications", m.updateNotificationSettings).Methods("POST")
 
 	return r
@@ -169,65 +168,65 @@ func (m *Endpoint) notifications(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (m *Endpoint) addTwitter(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, "")
-		return
-	}
+// func (m *Endpoint) addTwitter(w http.ResponseWriter, r *http.Request) {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, "")
+// 		return
+// 	}
 
-	id, ok := httputil.GetUserIDFromContext(r.Context())
-	if !ok {
-		httputil.JsonError(w, http.StatusUnauthorized, httputil.ErrorCodeInvalidRequestBody, "unauthorized")
-		return
-	}
+// 	id, ok := httputil.GetUserIDFromContext(r.Context())
+// 	if !ok {
+// 		httputil.JsonError(w, http.StatusUnauthorized, httputil.ErrorCodeInvalidRequestBody, "unauthorized")
+// 		return
+// 	}
 
-	token := r.Form.Get("token")
-	if token == "" {
-		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, "fuck")
-		return
-	}
+// 	token := r.Form.Get("token")
+// 	if token == "" {
+// 		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, "fuck")
+// 		return
+// 	}
 
-	secret := r.Form.Get("secret")
-	if secret == "" {
-		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, "fuck1")
-		return
-	}
+// 	secret := r.Form.Get("secret")
+// 	if secret == "" {
+// 		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, "fuck1")
+// 		return
+// 	}
 
-	access := oauth1.NewToken(token, secret)
-	httpClient := m.oauthConfig.Client(oauth1.NoContext, access)
+// 	access := oauth1.NewToken(token, secret)
+// 	httpClient := m.oauthConfig.Client(oauth1.NoContext, access)
 
-	client := twitter.NewClient(httpClient)
-	user, _, err := client.Accounts.VerifyCredentials(nil)
-	if err != nil {
-		httputil.JsonError(w, http.StatusInternalServerError, httputil.ErrorCodeInvalidRequestBody, err.Error())
-		return
-	}
+// 	client := twitter.NewClient(httpClient)
+// 	user, _, err := client.Accounts.VerifyCredentials(nil)
+// 	if err != nil {
+// 		httputil.JsonError(w, http.StatusInternalServerError, httputil.ErrorCodeInvalidRequestBody, err.Error())
+// 		return
+// 	}
 
-	err = m.la.LinkTwitterProfile(id, int(user.ID), token, secret, user.ScreenName)
-	if err != nil {
-		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, err.Error())
-		return
-	}
+// 	err = m.la.LinkTwitterProfile(id, int(user.ID), token, secret, user.ScreenName)
+// 	if err != nil {
+// 		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, err.Error())
+// 		return
+// 	}
 
-	httputil.JsonSuccess(w)
-}
+// 	httputil.JsonSuccess(w)
+// }
 
-func (m *Endpoint) removeTwitter(w http.ResponseWriter, r *http.Request) {
-	id, ok := httputil.GetUserIDFromContext(r.Context())
-	if !ok {
-		httputil.JsonError(w, http.StatusUnauthorized, httputil.ErrorCodeInvalidRequestBody, "unauthorized")
-		return
-	}
+// func (m *Endpoint) removeTwitter(w http.ResponseWriter, r *http.Request) {
+// 	id, ok := httputil.GetUserIDFromContext(r.Context())
+// 	if !ok {
+// 		httputil.JsonError(w, http.StatusUnauthorized, httputil.ErrorCodeInvalidRequestBody, "unauthorized")
+// 		return
+// 	}
 
-	err := m.la.UnlinkTwitterProfile(id)
-	if err != nil {
-		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, err.Error())
-		return
-	}
+// 	err := m.la.UnlinkTwitterProfile(id)
+// 	if err != nil {
+// 		httputil.JsonError(w, http.StatusBadRequest, httputil.ErrorCodeInvalidRequestBody, err.Error())
+// 		return
+// 	}
 
-	httputil.JsonSuccess(w)
-}
+// 	httputil.JsonSuccess(w)
+// }
 
 func (m *Endpoint) activeUsers(w http.ResponseWriter, r *http.Request) {
 	id, ok := httputil.GetUserIDFromContext(r.Context())
@@ -342,18 +341,18 @@ func (m *Endpoint) updateNotificationSettings(w http.ResponseWriter, r *http.Req
 	httputil.JsonSuccess(w)
 }
 
-func (m *Endpoint) followingRecommendations(w http.ResponseWriter, r *http.Request) {
-	id, ok := httputil.GetUserIDFromContext(r.Context())
-	if !ok {
-		httputil.JsonError(w, http.StatusUnauthorized, httputil.ErrorCodeInvalidRequestBody, "unauthorized")
-		return
-	}
+// func (m *Endpoint) followingRecommendations(w http.ResponseWriter, r *http.Request) {
+// 	id, ok := httputil.GetUserIDFromContext(r.Context())
+// 	if !ok {
+// 		httputil.JsonError(w, http.StatusUnauthorized, httputil.ErrorCodeInvalidRequestBody, "unauthorized")
+// 		return
+// 	}
 
-	res, err := m.recommendations.RecommendationsFor(id)
-	if err != nil {
-		httputil.JsonError(w, http.StatusInternalServerError, httputil.ErrorCodeInvalidRequestBody, "")
-		return
-	}
+// 	res, err := m.recommendations.RecommendationsFor(id)
+// 	if err != nil {
+// 		httputil.JsonError(w, http.StatusInternalServerError, httputil.ErrorCodeInvalidRequestBody, "")
+// 		return
+// 	}
 
-	_ = httputil.JsonEncode(w, res)
-}
+// 	_ = httputil.JsonEncode(w, res)
+// }

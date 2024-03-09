@@ -1,7 +1,3 @@
-[twitter]
-key = "urQc0u9lRS42XN8J5njYOR3GD"
-secret = "feX4xXuflmrnCPpgFCGptJiPEoxo7YsfTiznvhCJhoNm1yyXjB"
-
 [db]
 host = "127.0.0.1"
 port = 5432

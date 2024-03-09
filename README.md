@@ -40,11 +40,7 @@ if you want to test locally without vagrant, from the root of the project, run `
 
 Waiting on from client:
 TODO: sendgrid key (twillio)
-TODO: waiting on twitter
 
 Available to do:
 TODO: set up mixpanel (use personal account for now)
 TODO: deploy to digital ocean (ryan has account - in telegram chat) - (ON HOLD unitl LOCAL TESTING)
-
-Kinda done:
-TODO: twitter api key (using personal account for now, get creds from client + regenerate/wipe api keys after project)
