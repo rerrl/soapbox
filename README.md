@@ -38,9 +38,32 @@ how to get this thing going (linux)
 
 if you want to test locally without vagrant, from the root of the project, run `go run main.go -c conf/services/soapbox.toml`. As of right now things will be broken becuase no services are configured locally. Maybe docker-compose this to get it working locally?
 
-Waiting on from client:
-TODO: sendgrid key (twillio)
-
 Available to do:
 TODO: set up mixpanel (use personal account for now)
 TODO: deploy to digital ocean (ryan has account - in telegram chat) - (ON HOLD unitl LOCAL TESTING)
+
+rebuild script:
+
+```
+#!/bin/bash
+
+export GOPATH=/home/vagrant/go
+
+# Change directory and build the project
+echo "building soapbox main.go..."
+cd $GOPATH/src/github.com/soapboxsocial/soapbox
+sudo go build -o /usr/local/bin/soapbox main.go
+
+# Find the process ID of soapbox application, excluding the grep process itself
+pid=$(ps aux | grep "/usr/local/bin/soapbox" | grep -v grep | awk '{print $2}')
+
+# If a PID exists, kill the process
+if [ ! -z "$pid" ]; then
+    echo "Killing soapbox process with PID: $pid"
+    sudo kill $pid
+    echo "done."
+else
+    echo "No soapbox process found."
+fi
+
+```

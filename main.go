@@ -93,6 +93,11 @@ func main() {
 	rdb := redis.NewRedis(config.Redis)
 	fmt.Printf("rdb: %+v\n\n", rdb)
 
+	_, err = rdb.Ping(rdb.Context()).Result()
+	if err != nil {
+		log.Fatalf("failed to ping redis: %s", err)
+	}
+
 	queue := pubsub.NewQueue(rdb)
 	fmt.Printf("queue: %+v\n\n", queue)
 

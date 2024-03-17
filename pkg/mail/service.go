@@ -17,8 +17,8 @@ func NewMailService(client *sendgrid.Client) *Service {
 
 func (s *Service) SendPinEmail(recipient, pin string) error {
 	m := mail.NewV3Mail()
-	m.SetFrom(mail.NewEmail("Soapbox", "no-reply@mail.soapbox.social"))
-	m.SetTemplateID("d-94ee80b7ff33499894de719c02f095cf")
+	m.SetFrom(mail.NewEmail("GeniusCafe.iD", "Services@GeniusCafe.iD"))
+	m.SetTemplateID("d-bdd1ab78539a4796a1b4516651d41f7a")
 
 	p := mail.NewPersonalization()
 	p.AddTos(mail.NewEmail("", recipient))
