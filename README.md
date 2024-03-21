@@ -38,10 +38,6 @@ how to get this thing going (linux)
 
 if you want to test locally without vagrant, from the root of the project, run `go run main.go -c conf/services/soapbox.toml`. As of right now things will be broken becuase no services are configured locally. Maybe docker-compose this to get it working locally?
 
-Available to do:
-TODO: set up mixpanel (use personal account for now)
-TODO: deploy to digital ocean (ryan has account - in telegram chat) - (ON HOLD unitl LOCAL TESTING)
-
 rebuild script:
 
 ```
@@ -49,10 +45,31 @@ rebuild script:
 
 export GOPATH=/home/vagrant/go
 
+# copy latest configuration files
+sudo cp -r $GOPATH/src/github.com/soapboxsocial/soapbox/conf/services/* /conf/services/
+
 # Change directory and build the project
 echo "building soapbox main.go..."
 cd $GOPATH/src/github.com/soapboxsocial/soapbox
 sudo go build -o /usr/local/bin/soapbox main.go
+
+# Change to rooms directory to build rooms
+echo "building rooms main.go..."
+cd $GOPATH/src/github.com/soapboxsocial/soapbox/cmd/rooms
+sudo go build -o /usr/local/bin/rooms main.go
+
+# Find the process ID of rooms server
+pid=$(ps aux | grep "/usr/local/bin/rooms server" | grep -v grep | awk '{print $2}')
+
+
+# If a PID exists, kill the process
+if [ ! -z "$pid" ]; then
+    echo "Killing rooms process with PID: $pid"
+    sudo kill $pid
+    echo "Killed rooms process."
+else
+    echo "No rooms process found."
+fi
 
 # Find the process ID of soapbox application, excluding the grep process itself
 pid=$(ps aux | grep "/usr/local/bin/soapbox" | grep -v grep | awk '{print $2}')
@@ -61,9 +78,11 @@ pid=$(ps aux | grep "/usr/local/bin/soapbox" | grep -v grep | awk '{print $2}')
 if [ ! -z "$pid" ]; then
     echo "Killing soapbox process with PID: $pid"
     sudo kill $pid
-    echo "done."
+    echo "Killed soapbox process."
 else
     echo "No soapbox process found."
 fi
+
+echo "Done."
 
 ```
