@@ -11,7 +11,7 @@ vagrant reload
 
 The API is then available under the IP address: `192.168.33.16`
 
-# ANDREW
+# Development
 
 how to get this thing going (linux)
 
